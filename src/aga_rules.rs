@@ -11,7 +11,7 @@ use std::marker::PhantomData;
 /// A KoState as used by the aga super ko rules
 ///
 /// Stores a board-layout and the current player. Such a
-/// combination is not allowed to repeat with the same game. 
+/// combination is not allowed to repeat with the same game.
 #[derive(Hash, PartialEq, Clone, Eq)]
 struct KoState<Board>
     where Board : BoardTrait
@@ -20,7 +20,7 @@ struct KoState<Board>
     player: Player
 }
 
-impl<Board> KoState<Board> 
+impl<Board> KoState<Board>
     where Board : BoardTrait
 {
     /// Constructs a KoState from a board, position and player
@@ -50,7 +50,7 @@ pub struct AGAGameState<Board>
     ply : u32,
     /// The current game phase
     phase : GamePhase,
-    /// The positions currently marked as dead 
+    /// The positions currently marked as dead
     dead_stones : Option<Vec<Position>>,
     /// The set of ko states that are not allowed to repeat
     ko_states : HashSet<KoState<Board>>
@@ -70,7 +70,7 @@ impl<Board> GameState for AGAGameState<Board>
     }
 }
 
-impl<Board> AGAGameState<Board> 
+impl<Board> AGAGameState<Board>
     where Board : BoardTrait
 {
     /// Return the current player
@@ -111,25 +111,25 @@ pub enum AGAAction<Board>
     ///
     /// allowed at 1st ply, stones is the number of stones to set
     Handicap {stones: u8},
-    
+
     /// The given player passes
     Pass { player: Player},
-    
+
     /// The given player plays at the given position
     Play { player: Player, at: Position},
-    
+
     /// The given player requests the game to end
     ///
     /// The requesting player does also propose the
     /// dead stones.
     RequestEnd { player: Player, dead_stones: Vec<Position>},
-    
+
     /// The given player rejects the request to end the game
     RejectEnd { player: Player},
-    
+
     /// The given player accepts the request to end the game
     AcceptEnd { player: Player},
-    
+
     /// Used to hide unused param error
     ///
     /// The param Board is used to set the associated type when
@@ -140,33 +140,33 @@ pub enum AGAAction<Board>
 /// The set of possible game phases
 #[derive(PartialEq)]
 enum GamePhase {
-    /// Tha game is running. 
+    /// Tha game is running.
     ///
     /// The current player is allowed to play, pass and request to
     /// end the game.
     Running,
-    
+
     /// Black has passed
     ///
     /// If white passes next, the game ends
     BlackPassed,
-    
+
     /// The game is ending.
     ///
     /// White has passed after black passed. It is time to specify
     /// dead stones or to continue playing.
     Ending,
-    
+
     /// Black has requested to end the game
     ///
     /// White has to accept or reject the request.
     EndRequestedBlack,
-    
+
     /// White has requested to end the game
     ///
-    /// Black has to accept or reject the request. 
+    /// Black has to accept or reject the request.
     EndRequestedWhite,
-    
+
     /// The game ended
     ///
     /// There is nothing to be done except to count the points.

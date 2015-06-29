@@ -1,3 +1,4 @@
+
 use stone::Stone;
 
 /// A player
@@ -6,7 +7,7 @@ use stone::Stone;
 #[derive(Copy, PartialEq, Clone, Eq, Hash, Debug)]
 pub enum Player {
     Black,
-    White
+    White,
 }
 
 impl Player {
@@ -28,13 +29,13 @@ impl Player {
 }
 
 #[test]
-fn other(){
+fn other() {
     assert_eq!(Player::Black.other(), Player::White);
     assert_eq!(Player::White.other(), Player::Black);
 }
 
 #[test]
-fn to_stone(){
+fn to_stone() {
     assert_eq!(Player::Black.stone(), Stone::Black);
     assert_eq!(Player::White.stone(), Stone::White);
 }

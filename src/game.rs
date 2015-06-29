@@ -13,7 +13,7 @@ pub trait Action{
 
 	/// Tests if the action is aplicable to the given state
     fn test(self : &Self, state : &Self::GameState) -> bool;
-	
+
 	/// Executes the action on the given state
     fn execute(self : &Self, state : &mut Self::GameState);
 }
@@ -21,11 +21,11 @@ pub trait Action{
 /// An history item for use in the game tree
 #[derive(Debug)]
 struct HistoryItem<SomeAction>
-    where SomeAction : Action 
+    where SomeAction : Action
 {
 	/// The path to the parent item
     parent : Path,
-	
+
 	/// An action to be executed after the parent iten
     action : SomeAction,
 }
@@ -34,10 +34,10 @@ struct HistoryItem<SomeAction>
 ///
 /// A game is a tree of history items representing actions.
 /// This allows for easy undo/redo. Represents the tree
-/// as a flat array of items interlinked by parent-ids. 
+/// as a flat array of items interlinked by parent-ids.
 #[derive(Debug)]
 pub struct Game<SomeAction>
-    where SomeAction : Action 
+    where SomeAction : Action
 {
     data : Vec<HistoryItem<SomeAction>>
 }
