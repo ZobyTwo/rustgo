@@ -230,7 +230,7 @@ impl<Board> Action for AGAAction<Board>
                 if stones == 5 || stones == 7 || stones == 9 { //middle
                     state.board.set(&Position{x: 10, y: 10}, &Stone::Black);
                 }
-                if 6 <= stones && stones <= 9 { //left side and right sizde
+                if 6 <= stones && stones <= 9 { //left side and right side
                     state.board.set(&Position{x: 4, y: 10}, &Stone::Black);
                     state.board.set(&Position{x: 14, y: 10}, &Stone::Black);
                 }
