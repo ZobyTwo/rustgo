@@ -11,7 +11,7 @@ pub trait Action{
     /// The states these actions modify
     type GameState : GameState;
 
-    /// Tests if the action is aplicable to the given state
+    /// Tests if the action is applicable to the given state
     fn test(self : &Self, state : &Self::GameState) -> bool;
 
     /// Executes the action on the given state
