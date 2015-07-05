@@ -3,10 +3,8 @@ use std::collections::HashSet;
 
 use player::Player;
 use board::BoardTrait;
-use position::Position;
 use stone::Stone;
 use game::{GameState, Action};
-use std::marker::PhantomData;
 
 /// A KoState as used by the aga super ko rules
 ///
@@ -24,7 +22,7 @@ impl<Board> KoState<Board>
     where Board : BoardTrait
 {
     /// Constructs a KoState from a board, position and player
-    fn from_move(board : &Board, position : &Position, player : &Player) -> Self {
+    fn from_move(board : &Board, position : &Board::Position, player : &Player) -> Self {
         let mut board_copy = board.clone();
 
         let captured_stones = board_copy.would_be_captured(player, position);
@@ -51,7 +49,7 @@ pub struct AGAGameState<Board>
     /// The current game phase
     phase : GamePhase,
     /// The positions currently marked as dead
-    dead_stones : Option<Vec<Position>>,
+    dead_stones : Option<Vec<Board::Position>>,
     /// The set of ko states that are not allowed to repeat
     ko_states : HashSet<KoState<Board>>
 }
@@ -98,7 +96,7 @@ impl<Board> AGAGameState<Board>
     }
 
     /// Check if a ply at position by player would result in ko
-    fn would_be_ko(self : &Self, position : &Position, player : &Player) -> bool {
+    fn would_be_ko(self : &Self, position : &Board::Position, player : &Player) -> bool {
         self.ko_states.contains(&KoState::from_move(&self.board, position, player))
     }
 }
@@ -116,25 +114,19 @@ pub enum AGAAction<Board>
     Pass { player: Player},
 
     /// The given player plays at the given position
-    Play { player: Player, at: Position},
+    Play { player: Player, at: Board::Position},
 
     /// The given player requests the game to end
     ///
     /// The requesting player does also propose the
     /// dead stones.
-    RequestEnd { player: Player, dead_stones: Vec<Position>},
+    RequestEnd { player: Player, dead_stones: Vec<Board::Position>},
 
     /// The given player rejects the request to end the game
     RejectEnd { player: Player},
 
     /// The given player accepts the request to end the game
-    AcceptEnd { player: Player},
-
-    /// Used to hide unused param error
-    ///
-    /// The param Board is used to set the associated type when
-    /// implementing game::Action.
-    Phantom_ { board: PhantomData<Board> }
+    AcceptEnd { player: Player}
 }
 
 /// The set of possible game phases
@@ -210,34 +202,13 @@ impl<Board> Action for AGAAction<Board>
                 (state.phase == GamePhase::EndRequestedBlack && *player == Player::White
                     || state.phase == GamePhase::EndRequestedWhite && *player == Player::Black)
             }
-            _ => { false }
         }
     }
 
     fn execute(self : &Self, state : &mut Self::GameState) {
         match self {
             &AGAAction::Handicap{ stones } => {
-                if 2 <= stones && stones <= 9 { //upper right and lower left
-                    state.board.set(&Position{x: 14, y: 4}, &Stone::Black);
-                    state.board.set(&Position{x: 4, y: 14}, &Stone::Black);
-                }
-                if 3 <= stones && stones <= 9 { //lower right
-                    state.board.set(&Position{x: 14, y: 14}, &Stone::Black);
-                }
-                if 4 <= stones && stones <= 9 { //upper left
-                    state.board.set(&Position{x: 4, y: 4}, &Stone::Black);
-                }
-                if stones == 5 || stones == 7 || stones == 9 { //middle
-                    state.board.set(&Position{x: 10, y: 10}, &Stone::Black);
-                }
-                if 6 <= stones && stones <= 9 { //left side and right side
-                    state.board.set(&Position{x: 4, y: 10}, &Stone::Black);
-                    state.board.set(&Position{x: 14, y: 10}, &Stone::Black);
-                }
-                if stones == 8 || stones == 9 { //upper side and lower side
-                    state.board.set(&Position{x: 10, y: 4}, &Stone::Black);
-                    state.board.set(&Position{x: 10, y: 14}, &Stone::Black);
-                }
+                state.board.set_handicap(stones);
                 state.ply += 1;
                 state.register_ko_state();
             },
@@ -276,8 +247,7 @@ impl<Board> Action for AGAAction<Board>
             },
             &AGAAction::AcceptEnd { player: ref _player } => {
                 state.phase = GamePhase::Ended;
-            },
-            _ => {}
+            }
         }
     }
 }
@@ -288,7 +258,7 @@ mod test{
     use game::Path;
     use player::Player;
     use super::{AGAAction, GamePhase};
-    use position::Position;
+    use position::Position19x19;
     use stone::Stone;
     use board::{BoardTrait, Board19x19};
 
@@ -310,7 +280,7 @@ mod test{
         assert!(game.insert(&Path::Empty,
             AGAAction::Play {
                 player: Player::Black,
-                at: Position{x: 3, y: 3}
+                at: Position19x19{x: 3, y: 3}
             }) != Path::Empty);
     }
 
@@ -318,12 +288,12 @@ mod test{
     fn suicide(){
         let mut game = Game::new();
         let actions : Vec<AGAAction<Board19x19>> = vec!(
-            AGAAction::Play{player: Player::Black, at: Position{x: 0, y: 1}},
-            AGAAction::Play{player: Player::White, at: Position{x: 0, y: 2}},
-            AGAAction::Play{player: Player::Black, at: Position{x: 1, y: 0}},
-            AGAAction::Play{player: Player::White, at: Position{x: 1, y: 1}},
-            AGAAction::Play{player: Player::Black, at: Position{x: 5, y: 5}},
-            AGAAction::Play{player: Player::White, at: Position{x: 2, y: 0}}
+            AGAAction::Play{player: Player::Black, at: Position19x19{x: 0, y: 1}},
+            AGAAction::Play{player: Player::White, at: Position19x19{x: 0, y: 2}},
+            AGAAction::Play{player: Player::Black, at: Position19x19{x: 1, y: 0}},
+            AGAAction::Play{player: Player::White, at: Position19x19{x: 1, y: 1}},
+            AGAAction::Play{player: Player::Black, at: Position19x19{x: 5, y: 5}},
+            AGAAction::Play{player: Player::White, at: Position19x19{x: 2, y: 0}}
         );
 
         let mut cursor = Path::Empty;
@@ -332,7 +302,7 @@ mod test{
             assert!(cursor != Path::Empty);
         }
 
-        assert!(game.insert(&cursor, AGAAction::Play{ player: Player::Black, at: Position{x: 0, y: 0}})
+        assert!(game.insert(&cursor, AGAAction::Play{ player: Player::Black, at: Position19x19{x: 0, y: 0}})
             == Path::Empty);
     }
 
@@ -340,13 +310,13 @@ mod test{
     fn capture_ko() {
         let mut game = Game::new();
         let actions : Vec<AGAAction<Board19x19>> = vec!(
-            AGAAction::Play{ player: Player::Black, at: Position{x: 0, y: 0}},
-            AGAAction::Play{ player: Player::White, at: Position{x: 1, y: 0}},
-            AGAAction::Play{ player: Player::Black, at: Position{x: 2, y: 0}},
-            AGAAction::Play{ player: Player::White, at: Position{x: 0, y: 1}},
-            AGAAction::Play{ player: Player::Black, at: Position{x: 1, y: 1}},
-            AGAAction::Play{ player: Player::White, at: Position{x: 2, y: 1}},
-            AGAAction::Play{ player: Player::Black, at: Position{x: 0, y: 0}}
+            AGAAction::Play{ player: Player::Black, at: Position19x19{x: 0, y: 0}},
+            AGAAction::Play{ player: Player::White, at: Position19x19{x: 1, y: 0}},
+            AGAAction::Play{ player: Player::Black, at: Position19x19{x: 2, y: 0}},
+            AGAAction::Play{ player: Player::White, at: Position19x19{x: 0, y: 1}},
+            AGAAction::Play{ player: Player::Black, at: Position19x19{x: 1, y: 1}},
+            AGAAction::Play{ player: Player::White, at: Position19x19{x: 2, y: 1}},
+            AGAAction::Play{ player: Player::Black, at: Position19x19{x: 0, y: 0}}
         );
         // # . . .  # O . .   # O # .   . O # .  . O # .  . O # .  # . # .  recap is ko
         // . . . .  . . . .   . . . .   O . . .  O # . .  O # O .  O # O .
@@ -358,7 +328,7 @@ mod test{
             assert!(cursor != Path::Empty);
         }
 
-        assert!(game.insert(&cursor, AGAAction::Play{ player: Player::White, at: Position{x: 1, y: 0}})
+        assert!(game.insert(&cursor, AGAAction::Play{ player: Player::White, at: Position19x19{x: 1, y: 0}})
             == Path::Empty);
     }
 
@@ -388,9 +358,9 @@ mod test{
         let state = game.get_state(&cursor);
 
         assert!(state.current_player() == Player::White);
-        assert!(state.board.at(&Position{x: 14, y:  4}) == Stone::Black);
-        assert!(state.board.at(&Position{x:  4, y: 14}) == Stone::Black);
-        assert!(state.board.at(&Position{x: 14, y: 14}) == Stone::Black);
+        assert!(state.board.at(&Position19x19{x: 14, y:  4}) == Stone::Black);
+        assert!(state.board.at(&Position19x19{x:  4, y: 14}) == Stone::Black);
+        assert!(state.board.at(&Position19x19{x: 14, y: 14}) == Stone::Black);
     }
 
     #[test]
@@ -398,7 +368,7 @@ mod test{
         let mut game = Game::new();
         let mut cursor = Path::Empty;
 
-        cursor = game.insert(&cursor, AGAAction::Play{ player: Player::Black, at: Position{x: 2, y: 2}});
+        cursor = game.insert(&cursor, AGAAction::Play{ player: Player::Black, at: Position19x19{x: 2, y: 2}});
         cursor = game.insert(&cursor, AGAAction::Pass{player: Player::White});
         cursor = game.insert(&cursor, AGAAction::Pass{player: Player::Black});
 
@@ -412,7 +382,7 @@ mod test{
         assert!(game.insert(&cursor, AGAAction::AcceptEnd{player: Player::White}) == Path::Empty);
 
         assert!(game.insert(&cursor,
-                            AGAAction::RequestEnd{player: Player::Black, dead_stones: vec!(Position{x: 2, y: 3})})
+                            AGAAction::RequestEnd{player: Player::Black, dead_stones: vec!(Position19x19{x: 2, y: 3})})
             == Path::Empty);
 
         cursor = game.insert(&cursor, AGAAction::RequestEnd{player: Player::Black, dead_stones: vec!()});
