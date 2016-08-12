@@ -28,6 +28,9 @@ pub trait BoardTrait: Sized + Eq + Hash + Clone {
     /// Sets the requested amount of handicap stones
     fn set_handicap(&mut self, stones: u8);
 
+    /// Returns all positions.
+    fn positions(&self) -> Vec<Self::Position>;
+
     /// Returns the vector of stone next to the given position
     ///
     /// Does not only return occupied fields but also empty ones.
@@ -159,6 +162,17 @@ impl BoardTrait for Board19x19 {
         }
     }
 
+    fn positions(&self) -> Vec<Position19x19> {
+        let mut n = Vec::<Position19x19>::new();
+        for x in 0..19 {
+            for y in 0..19 {
+                n.push(Position19x19 { x: x, y: y });
+            }
+        }
+
+        n
+    }
+
     fn neighbors(&self, position: &Position19x19) -> Vec<Position19x19> {
         let mut n = Vec::<Position19x19>::new();
 
@@ -189,6 +203,59 @@ impl BoardTrait for Board19x19 {
 
         n
     }
+}
+
+fn erode<Board>(board: &mut Board, stone: Stone)
+    where Board: BoardTrait
+{
+    let mut change = true;
+    let positions = board.positions();
+
+    while change {
+        change = false;
+
+        let empty_positions: Vec<_> = positions.iter()
+            .filter(|pos| board.at(pos) == Stone::Empty)
+            .collect();
+
+        for empty_position in empty_positions {
+            let any_set = board.neighbors(empty_position)
+                .iter()
+                .any(|pos| board.at(pos) == stone);
+
+            if any_set {
+                board.set(empty_position, &stone);
+                change = true;
+            }
+        }
+    }
+}
+
+pub fn area_scoring<Board>(board: &Board) -> (i32, i32)
+    where Board: BoardTrait
+{
+    let mut white_board = board.clone();
+    let mut black_board = board.clone();
+    erode(&mut white_board, Stone::White);
+    erode(&mut black_board, Stone::Black);
+
+    // A position is either:
+    // + played by me (me_board = me, other_board = me),
+    // + my territory (me_board = me, other_board = empty),
+    // ~ seki (me_board = me, other_board = other),
+    // ~ not mine (me_board != me).
+
+    let white_score = board.positions()
+        .iter()
+        .filter(|pos| white_board.at(pos) == Stone::White || black_board.at(pos) != Stone::Black)
+        .count();
+
+    let black_score = board.positions()
+        .iter()
+        .filter(|pos| black_board.at(pos) == Stone::Black || white_board.at(pos) != Stone::White)
+        .count();
+
+    (black_score as i32, white_score as i32)
 }
 
 

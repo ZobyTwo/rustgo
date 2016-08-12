@@ -2,7 +2,7 @@
 use std::collections::HashSet;
 
 use player::Player;
-use board::BoardTrait;
+use board::{BoardTrait, area_scoring};
 use stone::Stone;
 use game::{GameState, Action};
 
@@ -142,7 +142,7 @@ enum GamePhase {
 
     /// Black has passed
     ///
-    /// If white passes next, the game ends
+    /// If white passes next, the game's state transitions to Ending.
     BlackPassed,
 
     /// The game is ending.
@@ -151,20 +151,15 @@ enum GamePhase {
     /// dead stones or to continue playing.
     Ending,
 
-    /// Black has requested to end the game
+    /// The stored player has requested to end the game.
     ///
-    /// White has to accept or reject the request.
-    EndRequestedBlack,
-
-    /// White has requested to end the game
-    ///
-    /// Black has to accept or reject the request.
-    EndRequestedWhite,
+    /// The other player has to accept or reject the request.
+    EndRequested(Player),
 
     /// The game ended
     ///
-    /// There is nothing to be done except to count the points.
-    Ended,
+    /// The game ended with (black_score, white_score).
+    Ended(i32, i32),
 }
 
 impl<Board> Action for AGAAction<Board>
@@ -191,12 +186,12 @@ impl<Board> Action for AGAAction<Board>
             // A play is only allowed on the board (doh!) and at an empty
             // intersection if it is my turn and neither suicide nor ko.
             AGAAction::Play { ref player, at: ref position } => {
-                let valid_position = state.board.on_board(position)
-                    && state.board.at(&position) == Stone::Empty;
-                let valid_move = !state.board.would_be_suicide(position, player)
-                    && !state.would_be_ko(position, player);
-                let valid_phase = state.phase == GamePhase::Running
-                    || state.phase == GamePhase::BlackPassed;
+                let valid_position = state.board.on_board(position) &&
+                                     state.board.at(&position) == Stone::Empty;
+                let valid_move = !state.board.would_be_suicide(position, player) &&
+                                 !state.would_be_ko(position, player);
+                let valid_phase = state.phase == GamePhase::Running ||
+                                  state.phase == GamePhase::BlackPassed;
                 let my_turn = *player == state.current_player();
 
                 valid_position && valid_move && valid_phase && my_turn
@@ -207,24 +202,29 @@ impl<Board> Action for AGAAction<Board>
             AGAAction::RequestEnd { player: ref _player, ref dead_stones } => {
                 let valid_phase = state.phase == GamePhase::Ending;
                 let valid_dead_stones = dead_stones.iter()
-                    .all(|pos| state.board.at(pos) != Stone::Empty
-                        && state.board.on_board(pos));
-                
+                    .all(|pos| state.board.at(pos) != Stone::Empty && state.board.on_board(pos));
+
                 valid_phase && valid_dead_stones
             }
 
             // Rejecting the end of the game is allowed if the other player
             // requested ending the game.
             AGAAction::RejectEnd { ref player } => {
-                (state.phase == GamePhase::EndRequestedBlack && *player == Player::White ||
-                 state.phase == GamePhase::EndRequestedWhite && *player == Player::Black)
+                if let GamePhase::EndRequested(ref requesting_player) = state.phase {
+                    requesting_player != player
+                } else {
+                    false
+                }
             }
 
             // Accepting the end of the game is allowed if the other player
             // requested ending the game.
             AGAAction::AcceptEnd { ref player } => {
-                (state.phase == GamePhase::EndRequestedBlack && *player == Player::White ||
-                 state.phase == GamePhase::EndRequestedWhite && *player == Player::Black)
+                if let GamePhase::EndRequested(ref requesting_player) = state.phase {
+                    requesting_player != player
+                } else {
+                    false
+                }
             }
         }
     }
@@ -256,12 +256,7 @@ impl<Board> Action for AGAAction<Board>
                 state.register_ko_state();
             }
             &AGAAction::RequestEnd { ref player, ref dead_stones } => {
-                if *player == Player::Black {
-                    state.phase = GamePhase::EndRequestedBlack;
-                } else if *player == Player::White {
-                    state.phase = GamePhase::EndRequestedWhite;
-                }
-
+                state.phase = GamePhase::EndRequested(*player);
                 state.dead_stones = Option::Some(dead_stones.clone());
             }
             &AGAAction::RejectEnd { player: ref _player } => {
@@ -269,7 +264,8 @@ impl<Board> Action for AGAAction<Board>
                 state.dead_stones = Option::None;
             }
             &AGAAction::AcceptEnd { player: ref _player } => {
-                state.phase = GamePhase::Ended;
+                let (score_black, score_white) = area_scoring(&state.board);
+                state.phase = GamePhase::Ended(score_black, score_white);
             }
         }
     }
