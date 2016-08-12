@@ -33,6 +33,10 @@
             "taskName": "doc",
             "showOutput": "always"
         },
+        {   
+            "taskName": "fmt",
+            "showOutput": "silent"
+        },
         {
             "taskName": "test",
             "showOutput": "always",
