@@ -20,15 +20,20 @@ pub struct Group<'boardlt, Board>
 }
 
 impl<'boardlt, Board> Group<'boardlt, Board>
-	where Board : BoardTrait + 'boardlt
+    where Board: BoardTrait + 'boardlt
 {
     /// Creates a new group
     ///
     /// Collects all stones with the same color at the given position.
     /// If there is no stone, the group will be empty.
     pub fn new(board: &'boardlt Board, position: &Board::Position) -> Group<'boardlt, Board> {
-        match board.at(position){
-            Stone::Empty => Group{positions: HashSet::new(), board: board},
+        match board.at(position) {
+            Stone::Empty => {
+                Group {
+                    positions: HashSet::new(),
+                    board: board,
+                }
+            }
             stone => {
                 let mut stack = Vec::<Board::Position>::new();
                 let mut content = HashSet::<Board::Position>::new();
@@ -36,12 +41,12 @@ impl<'boardlt, Board> Group<'boardlt, Board>
                 stack.push(*position);
                 content.insert(*position);
 
-                while stack.len() != 0{
+                while stack.len() != 0 {
                     let top = stack.pop().unwrap();
 
                     for n in &board.neighbors(&top) {
                         match board.at(n) {
-                            Stone::Empty => {},
+                            Stone::Empty => {}
                             owner => {
                                 if owner == stone && !content.contains(n) {
                                     content.insert(*n);
@@ -52,10 +57,10 @@ impl<'boardlt, Board> Group<'boardlt, Board>
                     }
                 }
 
-                Group{
-					positions: content,
-					board: board
-				}
+                Group {
+                    positions: content,
+                    board: board,
+                }
             }
         }
     }
@@ -72,9 +77,11 @@ impl<'boardlt, Board> Group<'boardlt, Board>
 
     /// Returns the hashset of positions that are liberties of the group
     pub fn liberties(&self) -> HashSet<Board::Position> {
-        self.positions.iter()
-        	.flat_map(|p| self.board.neighbors(p))
-        	.filter(|p| self.board.at(p) == Stone::Empty).collect()
+        self.positions
+            .iter()
+            .flat_map(|p| self.board.neighbors(p))
+            .filter(|p| self.board.at(p) == Stone::Empty)
+            .collect()
     }
 
     /// Returns the groups stone-color
@@ -86,7 +93,7 @@ impl<'boardlt, Board> Group<'boardlt, Board>
 }
 
 #[cfg(test)]
-mod test{
+mod test {
     use board::{Board19x19, BoardTrait};
     use position::Position19x19;
     use stone::Stone;
@@ -95,14 +102,14 @@ mod test{
     #[test]
     fn create() {
         let mut board = Board19x19::new();
-        board.set(&Position19x19{x: 4, y: 4}, &Stone::Black);
-        board.set(&Position19x19{x: 8, y: 8}, &Stone::White);
-        board.set(&Position19x19{x: 8, y: 9}, &Stone::White);
+        board.set(&Position19x19 { x: 4, y: 4 }, &Stone::Black);
+        board.set(&Position19x19 { x: 8, y: 8 }, &Stone::White);
+        board.set(&Position19x19 { x: 8, y: 9 }, &Stone::White);
 
-        let empty_group = Group::new(&board, &Position19x19{x: 0, y: 0});
-        let black_group = Group::new(&board, &Position19x19{x: 4, y: 4});
-        let white_group = Group::new(&board, &Position19x19{x: 8, y: 8});
-        let alternative = Group::new(&board, &Position19x19{x: 8, y: 9});
+        let empty_group = Group::new(&board, &Position19x19 { x: 0, y: 0 });
+        let black_group = Group::new(&board, &Position19x19 { x: 4, y: 4 });
+        let white_group = Group::new(&board, &Position19x19 { x: 8, y: 8 });
+        let alternative = Group::new(&board, &Position19x19 { x: 8, y: 9 });
 
         assert_eq!(empty_group.len(), 0);
         assert_eq!(black_group.len(), 1);
@@ -113,12 +120,12 @@ mod test{
     #[test]
     fn liberties() {
         let mut board = Board19x19::new();
-        board.set(&Position19x19{x: 7, y: 8}, &Stone::White); //   .
-        board.set(&Position19x19{x: 8, y: 7}, &Stone::Black); //  .O.
-        board.set(&Position19x19{x: 8, y: 8}, &Stone::White); //  XOO.
-        board.set(&Position19x19{x: 8, y: 9}, &Stone::White); //   ..
+        board.set(&Position19x19 { x: 7, y: 8 }, &Stone::White); //   .
+        board.set(&Position19x19 { x: 8, y: 7 }, &Stone::Black); //  .O.
+        board.set(&Position19x19 { x: 8, y: 8 }, &Stone::White); //  XOO.
+        board.set(&Position19x19 { x: 8, y: 9 }, &Stone::White); //   ..
 
-        let white_group = Group::new(&board, &Position19x19{x: 8, y: 8});
+        let white_group = Group::new(&board, &Position19x19 { x: 8, y: 8 });
         assert_eq!(white_group.liberties().len(), 6);
     }
 }

@@ -15,7 +15,7 @@ impl Player {
     pub fn other(&self) -> Player {
         match *self {
             Player::Black => Player::White,
-            Player::White => Player::Black
+            Player::White => Player::Black,
         }
     }
 
@@ -23,7 +23,7 @@ impl Player {
     pub fn stone(&self) -> Stone {
         match *self {
             Player::Black => Stone::Black,
-            Player::White => Stone::White
+            Player::White => Stone::White,
         }
     }
 }

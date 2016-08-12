@@ -7,27 +7,27 @@ pub trait GameState {
 }
 
 /// An game action
-pub trait Action{
+pub trait Action {
     /// The states these actions modify
-    type GameState : GameState;
+    type GameState: GameState;
 
     /// Tests if the action is applicable to the given state
-    fn test(self : &Self, state : &Self::GameState) -> bool;
+    fn test(self: &Self, state: &Self::GameState) -> bool;
 
     /// Executes the action on the given state
-    fn execute(self : &Self, state : &mut Self::GameState);
+    fn execute(self: &Self, state: &mut Self::GameState);
 }
 
 /// An history item for use in the game tree
 #[derive(Debug)]
 struct HistoryItem<SomeAction>
-    where SomeAction : Action
+    where SomeAction: Action
 {
     /// The path to the parent item
-    parent : Path,
+    parent: Path,
 
     /// An action to be executed after the parent iten
-    action : SomeAction,
+    action: SomeAction,
 }
 
 /// The game tree
@@ -37,9 +37,9 @@ struct HistoryItem<SomeAction>
 /// as a flat array of items interlinked by parent-ids.
 #[derive(Debug)]
 pub struct Game<SomeAction>
-    where SomeAction : Action
+    where SomeAction: Action
 {
-    data : Vec<HistoryItem<SomeAction>>
+    data: Vec<HistoryItem<SomeAction>>,
 }
 
 /// The path to one game tree item
@@ -50,31 +50,30 @@ pub enum Path {
     /// There is no parent (we mean the trees root)
     Empty,
     /// The parents id
-    HistoryItemId(usize)
+    HistoryItemId(usize),
 }
 
 impl<SomeAction> Game<SomeAction>
-    where SomeAction : Action {
+    where SomeAction: Action
+{
     /// Creates a new game
     pub fn new() -> Self {
-        Game {
-            data: Vec::new()
-        }
+        Game { data: Vec::new() }
     }
 
     /// Inserts the action after parent
     ///
     /// Does reconstruct the game state at path and applies action
-    pub fn insert(self : &mut Self, parent : &Path, action : SomeAction) -> Path {
+    pub fn insert(self: &mut Self, parent: &Path, action: SomeAction) -> Path {
         let state = self.get_state(parent);
 
         if action.test(&state) {
-            self.data.push(HistoryItem{
+            self.data.push(HistoryItem {
                 parent: parent.clone(),
-                action: action
+                action: action,
             });
 
-            Path::HistoryItemId(self.data.len() -1)
+            Path::HistoryItemId(self.data.len() - 1)
         } else {
             Path::Empty
         }
@@ -83,10 +82,10 @@ impl<SomeAction> Game<SomeAction>
     /// Returns the state at the given path
     ///
     /// Does reapply all previous actions
-    pub fn get_state(self : &Self, at : &Path) -> SomeAction::GameState {
+    pub fn get_state(self: &Self, at: &Path) -> SomeAction::GameState {
         let mut state = SomeAction::GameState::new();
 
-        if let &Path::HistoryItemId(up_to) = at  {
+        if let &Path::HistoryItemId(up_to) = at {
             let mut path = Vec::<usize>::new();
             let mut curr = up_to;
 
@@ -107,42 +106,38 @@ impl<SomeAction> Game<SomeAction>
 }
 
 #[cfg(test)]
-mod test{
+mod test {
     use super::{Game, GameState, Action, Path};
 
-    struct SimpleGameState{
-        acc : i32
+    struct SimpleGameState {
+        acc: i32,
     }
 
     impl GameState for SimpleGameState {
         fn new() -> SimpleGameState {
-            SimpleGameState{
-                acc: 0
-            }
+            SimpleGameState { acc: 0 }
         }
     }
 
-    enum SimpleAction{
+    enum SimpleAction {
         Inc,
-        Dec
+        Dec,
     }
 
-    impl Action for SimpleAction{
+    impl Action for SimpleAction {
         type GameState = SimpleGameState;
 
-        fn test(self : &Self, state : &SimpleGameState) -> bool {
+        fn test(self: &Self, state: &SimpleGameState) -> bool {
             match self {
                 &SimpleAction::Inc => true,
-                &SimpleAction::Dec => {
-                    state.acc > 0
-                }
+                &SimpleAction::Dec => state.acc > 0,
             }
         }
 
-        fn execute(self : &Self, state : &mut SimpleGameState) {
+        fn execute(self: &Self, state: &mut SimpleGameState) {
             match self {
                 &SimpleAction::Inc => state.acc += 1,
-                &SimpleAction::Dec => state.acc -= 1
+                &SimpleAction::Dec => state.acc -= 1,
             }
         }
     }
