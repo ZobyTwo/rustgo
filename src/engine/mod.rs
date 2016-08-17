@@ -10,7 +10,7 @@ pub trait GameState {
 }
 
 
-/// An game action
+/// A game action
 pub trait Action {
     /// The states these actions modify
     type GameState: GameState;
