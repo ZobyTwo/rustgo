@@ -1,4 +1,3 @@
-
 /// A stone
 ///
 /// Either black, white or empty.
