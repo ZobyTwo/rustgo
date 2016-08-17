@@ -115,7 +115,10 @@ pub enum Action<TBoard>
     Pass { player: Player },
 
     /// The given player plays at the given position
-    Play { player: Player, at: TBoard::Position },
+    Play {
+        player: Player,
+        at: TBoard::Position,
+    },
 
     /// The given player requests the game to end
     ///

@@ -67,14 +67,9 @@ impl<'boardlt, TBoard> Group<'boardlt, TBoard>
         }
     }
 
-    /// Returns if the position is part of the group
-    pub fn contains(&self, pos: &TBoard::Position) -> bool {
-        self.positions.contains(pos)
-    }
-
-    #[cfg(test)]
-    pub fn len(&self) -> usize {
-        self.positions.len()
+    /// Returns a view into the contained positions
+    pub fn positions(&self) -> &HashSet<TBoard::Position> {
+        &self.positions
     }
 
     /// Returns the hashset of positions that are liberties of the group
@@ -91,5 +86,3 @@ impl<'boardlt, TBoard> Group<'boardlt, TBoard>
         self.positions.iter().next().map(|p| self.board.at(p))
     }
 }
-
-

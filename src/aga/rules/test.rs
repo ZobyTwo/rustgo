@@ -28,29 +28,29 @@ fn play() {
 fn suicide() {
     let mut game = AGAGame::new();
     let actions: Vec<Action<Board19x19>> = vec![Action::Play {
-                                                        player: Player::Black,
-                                                        at: Position19x19 { x: 0, y: 1 },
-                                                    },
-                                                    Action::Play {
-                                                        player: Player::White,
-                                                        at: Position19x19 { x: 0, y: 2 },
-                                                    },
-                                                    Action::Play {
-                                                        player: Player::Black,
-                                                        at: Position19x19 { x: 1, y: 0 },
-                                                    },
-                                                    Action::Play {
-                                                        player: Player::White,
-                                                        at: Position19x19 { x: 1, y: 1 },
-                                                    },
-                                                    Action::Play {
-                                                        player: Player::Black,
-                                                        at: Position19x19 { x: 5, y: 5 },
-                                                    },
-                                                    Action::Play {
-                                                        player: Player::White,
-                                                        at: Position19x19 { x: 2, y: 0 },
-                                                    }];
+                                                    player: Player::Black,
+                                                    at: Position19x19 { x: 0, y: 1 },
+                                                },
+                                                Action::Play {
+                                                    player: Player::White,
+                                                    at: Position19x19 { x: 0, y: 2 },
+                                                },
+                                                Action::Play {
+                                                    player: Player::Black,
+                                                    at: Position19x19 { x: 1, y: 0 },
+                                                },
+                                                Action::Play {
+                                                    player: Player::White,
+                                                    at: Position19x19 { x: 1, y: 1 },
+                                                },
+                                                Action::Play {
+                                                    player: Player::Black,
+                                                    at: Position19x19 { x: 5, y: 5 },
+                                                },
+                                                Action::Play {
+                                                    player: Player::White,
+                                                    at: Position19x19 { x: 2, y: 0 },
+                                                }];
 
     let mut cursor = Path::Empty;
     for action in actions {
@@ -69,33 +69,33 @@ fn suicide() {
 fn capture_ko() {
     let mut game = AGAGame::new();
     let actions: Vec<Action<Board19x19>> = vec![Action::Play {
-                                                        player: Player::Black,
-                                                        at: Position19x19 { x: 0, y: 0 },
-                                                    },
-                                                    Action::Play {
-                                                        player: Player::White,
-                                                        at: Position19x19 { x: 1, y: 0 },
-                                                    },
-                                                    Action::Play {
-                                                        player: Player::Black,
-                                                        at: Position19x19 { x: 2, y: 0 },
-                                                    },
-                                                    Action::Play {
-                                                        player: Player::White,
-                                                        at: Position19x19 { x: 0, y: 1 },
-                                                    },
-                                                    Action::Play {
-                                                        player: Player::Black,
-                                                        at: Position19x19 { x: 1, y: 1 },
-                                                    },
-                                                    Action::Play {
-                                                        player: Player::White,
-                                                        at: Position19x19 { x: 2, y: 1 },
-                                                    },
-                                                    Action::Play {
-                                                        player: Player::Black,
-                                                        at: Position19x19 { x: 0, y: 0 },
-                                                    }];
+                                                    player: Player::Black,
+                                                    at: Position19x19 { x: 0, y: 0 },
+                                                },
+                                                Action::Play {
+                                                    player: Player::White,
+                                                    at: Position19x19 { x: 1, y: 0 },
+                                                },
+                                                Action::Play {
+                                                    player: Player::Black,
+                                                    at: Position19x19 { x: 2, y: 0 },
+                                                },
+                                                Action::Play {
+                                                    player: Player::White,
+                                                    at: Position19x19 { x: 0, y: 1 },
+                                                },
+                                                Action::Play {
+                                                    player: Player::Black,
+                                                    at: Position19x19 { x: 1, y: 1 },
+                                                },
+                                                Action::Play {
+                                                    player: Player::White,
+                                                    at: Position19x19 { x: 2, y: 1 },
+                                                },
+                                                Action::Play {
+                                                    player: Player::Black,
+                                                    at: Position19x19 { x: 0, y: 0 },
+                                                }];
     // # . . .  # O . .   # O # .   . O # .  . O # .  . O # .  # . # .  recap is ko
     // . . . .  . . . .   . . . .   O . . .  O # . .  O # O .  O # O .
     // . . . .  . . . .   . . . .   . . . .  . . . .  . . . .  . . . .
@@ -150,10 +150,10 @@ fn end() {
     let mut cursor = Path::Empty;
 
     cursor = game.insert(&cursor,
-                            Action::Play {
-                                player: Player::Black,
-                                at: Position19x19 { x: 2, y: 2 },
-                            });
+                         Action::Play {
+                             player: Player::Black,
+                             at: Position19x19 { x: 2, y: 2 },
+                         });
     cursor = game.insert(&cursor, Action::Pass { player: Player::White });
     cursor = game.insert(&cursor, Action::Pass { player: Player::Black });
 
@@ -161,14 +161,10 @@ fn end() {
     cursor = game.insert(&cursor, Action::Pass { player: Player::White });
     assert!(game.get_state(&cursor).phase == GamePhase::Ending);
 
-    assert!(game.insert(&cursor, Action::RejectEnd { player: Player::Black }) ==
-            Path::Empty);
-    assert!(game.insert(&cursor, Action::RejectEnd { player: Player::White }) ==
-            Path::Empty);
-    assert!(game.insert(&cursor, Action::AcceptEnd { player: Player::Black }) ==
-            Path::Empty);
-    assert!(game.insert(&cursor, Action::AcceptEnd { player: Player::White }) ==
-            Path::Empty);
+    assert!(game.insert(&cursor, Action::RejectEnd { player: Player::Black }) == Path::Empty);
+    assert!(game.insert(&cursor, Action::RejectEnd { player: Player::White }) == Path::Empty);
+    assert!(game.insert(&cursor, Action::AcceptEnd { player: Player::Black }) == Path::Empty);
+    assert!(game.insert(&cursor, Action::AcceptEnd { player: Player::White }) == Path::Empty);
 
     assert!(game.insert(&cursor,
                         Action::RequestEnd {
@@ -177,14 +173,13 @@ fn end() {
                         }) == Path::Empty);
 
     cursor = game.insert(&cursor,
-                            Action::RequestEnd {
-                                player: Player::Black,
-                                dead_stones: vec![],
-                            });
+                         Action::RequestEnd {
+                             player: Player::Black,
+                             dead_stones: vec![],
+                         });
     assert!(cursor != Path::Empty);
 
-    assert!(game.insert(&cursor, Action::AcceptEnd { player: Player::Black }) ==
-            Path::Empty);
+    assert!(game.insert(&cursor, Action::AcceptEnd { player: Player::Black }) == Path::Empty);
     cursor = game.insert(&cursor, Action::AcceptEnd { player: Player::White });
     assert!(cursor != Path::Empty);
 }

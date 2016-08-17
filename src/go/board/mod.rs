@@ -36,11 +36,6 @@ pub trait Board: Sized + Eq + Hash + Clone {
     /// Does not only return occupied fields but also empty ones.
     fn neighbors(&self, position: &Self::Position) -> Vec<Self::Position>;
 
-    /// Returns the possibly empty group that contains the position
-    fn group_at<'boardlt>(&'boardlt self, position: &Self::Position) -> Group<'boardlt, Self> {
-        Group::new(self, position)
-    }
-
     /// Returns the vector of groups that have a liberty at the given position
     fn groups_with_liberty_at<'boardlt>(&'boardlt self,
                                         position: &Self::Position)
@@ -51,7 +46,7 @@ pub trait Board: Sized + Eq + Hash + Clone {
 
         let mut found_groups = Vec::<Group<Self>>::new();
         for pos in &self.neighbors(position) {
-            if found_groups.iter().any(|g| g.contains(pos)) {
+            if found_groups.iter().any(|g| g.positions.contains(pos)) {
                 continue;
             }
 
@@ -61,14 +56,17 @@ pub trait Board: Sized + Eq + Hash + Clone {
         found_groups
     }
 
-    /// Returns the set of stones that would be captured if the given player plays at the given position
+    /// Returns the set of stones that would be captured if the given player plays at
+    /// the given position
     fn would_be_captured(&self,
                          player: &Player,
                          position: &Self::Position)
                          -> HashSet<Self::Position> {
         self.groups_with_liberty_at(position)
             .iter()
-            .filter(|g| g.stone().unwrap_or(Stone::Empty) != player.stone() && g.liberties().len() == 1)
+            .filter(|g| {
+                g.stone().unwrap_or(Stone::Empty) != player.stone() && g.liberties().len() == 1
+            })
             .flat_map(|g| g.positions.iter())
             .cloned()
             .collect()
@@ -110,8 +108,7 @@ pub trait Board: Sized + Eq + Hash + Clone {
 
     /// Fills all empty intersections that neighbor a stone with the given color by
     /// stones of that color. Repeats until nothing changes.
-    fn erode(&mut self, stone: Stone)
-    {
+    fn erode(&mut self, stone: Stone) {
         let mut change = true;
         let positions = self.positions();
 
@@ -135,8 +132,7 @@ pub trait Board: Sized + Eq + Hash + Clone {
         }
     }
 
-    fn area_scoring(&self) -> (usize, usize)
-    {
+    fn area_scoring(&self) -> (usize, usize) {
         let mut white_board = self.clone();
         let mut black_board = self.clone();
 
@@ -151,12 +147,16 @@ pub trait Board: Sized + Eq + Hash + Clone {
 
         let white_score = self.positions()
             .iter()
-            .filter(|pos| white_board.at(pos) == Stone::White || black_board.at(pos) != Stone::Black)
+            .filter(|pos| {
+                white_board.at(pos) == Stone::White || black_board.at(pos) != Stone::Black
+            })
             .count();
 
         let black_score = self.positions()
             .iter()
-            .filter(|pos| black_board.at(pos) == Stone::Black || white_board.at(pos) != Stone::White)
+            .filter(|pos| {
+                black_board.at(pos) == Stone::Black || white_board.at(pos) != Stone::White
+            })
             .count();
 
         (black_score, white_score)

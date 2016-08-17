@@ -15,9 +15,9 @@ mod test {
         let white_group = Group::new(&board, &Position19x19 { x: 8, y: 8 });
         let alternative = Group::new(&board, &Position19x19 { x: 8, y: 9 });
 
-        assert_eq!(empty_group.len(), 0);
-        assert_eq!(black_group.len(), 1);
-        assert_eq!(white_group.len(), 2);
+        assert_eq!(empty_group.positions.len(), 0);
+        assert_eq!(black_group.positions.len(), 1);
+        assert_eq!(white_group.positions.len(), 2);
         assert_eq!(white_group, alternative);
     }
 
